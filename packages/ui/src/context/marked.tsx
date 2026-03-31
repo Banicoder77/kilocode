@@ -443,6 +443,13 @@ async function highlightCodeBlocks(html: string): Promise<string> {
       .replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'")
 
+    // Render latex/math/tex blocks with KaTeX as display math
+    if (lang === "latex" || lang === "math" || lang === "tex") {
+      const rendered = katex.renderToString(code, { displayMode: true, throwOnError: false })
+      result = result.replace(fullMatch, () => rendered)
+      continue
+    }
+
     let language = lang || "text"
     if (!(language in bundledLanguages)) {
       language = "text"
@@ -646,6 +653,11 @@ export const { use: useMarked, provider: MarkedProvider } = createSimpleContext(
             return `<code>${escaped}</code>`
           },
           code({ text, lang }) {
+            // Render latex/math/tex fenced code blocks with KaTeX as display math
+            // instead of as a syntax-highlighted code block.
+            if (lang === "latex" || lang === "math" || lang === "tex") {
+              return katex.renderToString(text, { displayMode: true, throwOnError: false })
+            }
             const escaped = text
               .replace(/&/g, "&amp;")
               .replace(/</g, "&lt;")
